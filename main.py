@@ -181,14 +181,88 @@
 # contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
 # Contour Features
+# import numpy as np
+# import cv2 as cv
+
+# img = cv.imread('glass.jpg', cv.IMREAD_GRAYSCALE)
+# assert img is not None, "file could not be read, check with os.path.exists()"
+# ret,thresh = cv.threshold(img,127,255,0)
+# contours,hierarchy = cv.findContours(thresh, 1, 2)
+
+# cnt = contours[0]
+# M = cv.moments(cnt)
+# print( M )
+# Hough Line Transform
+# import cv2 as cv
+# import numpy as np
+
+# img = cv.imread(cv.samples.findFile('glass.jpg'))
+# gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+# edges = cv.Canny(gray,50,150,apertureSize = 3)
+
+# lines = cv.HoughLines(edges,1,np.pi/180,200)
+# for line in lines:
+#     rho,theta = line[0]
+#     a = np.cos(theta)
+#     b = np.sin(theta)
+#     x0 = a*rho
+#     y0 = b*rho
+#     x1 = int(x0 + 1000*(-b))
+#     y1 = int(y0 + 1000*(a))
+#     x2 = int(x0 - 1000*(-b))
+#     y2 = int(y0 - 1000*(a))
+
+#     cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+
+# cv.imwrite('houghlines3.jpg',img)
+# Hough Circle Transform
+# import numpy as np
+# import cv2 as cv
+
+# img = cv.imread('glass.jpg', cv.IMREAD_GRAYSCALE)
+# assert img is not None, "file could not be read, check with os.path.exists()"
+# img = cv.medianBlur(img,5)
+# cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR)
+
+# circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,20,
+#                             param1=50,param2=30,minRadius=0,maxRadius=0)
+
+# circles = np.uint16(np.around(circles))
+# for i in circles[0,:]:
+#     # draw the outer circle
+#     cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+#     # draw the center of the circle
+#     cv.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+
+# cv.imshow('detected circles',cimg)
+# cv.waitKey(0)
+# cv.destroyAllWindows()
+
+# Image Segmentation with Watershed Algorithm
+# import numpy as np
+# import cv2 as cv
+# from matplotlib import pyplot as plt
+
+# img = cv.imread('glass.jpg')
+# assert img is not None, "file could not be read, check with os.path.exists()"
+# gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+# ret, thresh = cv.threshold(gray,0,255,cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
+# Interactive Foreground Extraction using GrabCut Algorithm
 import numpy as np
 import cv2 as cv
+from matplotlib import pyplot as plt
 
-img = cv.imread('glass.jpg', cv.IMREAD_GRAYSCALE)
+img = cv.imread('glass.jpg')
 assert img is not None, "file could not be read, check with os.path.exists()"
-ret,thresh = cv.threshold(img,127,255,0)
-contours,hierarchy = cv.findContours(thresh, 1, 2)
+mask = np.zeros(img.shape[:2],np.uint8)
 
-cnt = contours[0]
-M = cv.moments(cnt)
-print( M )
+bgdModel = np.zeros((1,65),np.float64)
+fgdModel = np.zeros((1,65),np.float64)
+
+rect = (50,50,450,290)
+cv.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv.GC_INIT_WITH_RECT)
+
+mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+img = img*mask2[:,:,np.newaxis]
+
+plt.imshow(img),plt.colorbar(),plt.show()
